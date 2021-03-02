@@ -36,9 +36,3 @@ def queryToDictionary(path):
                 kv[splitEquals[0]] = splitPlus
 
         return kv
-
-
-
-test = "/images?images=cat+kitten+dog&name=Mitch"
-
-print(handleQuery(test))
