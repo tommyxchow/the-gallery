@@ -84,7 +84,6 @@ def main():
 
     server = socketserver.ThreadingTCPServer((host, port), MyTCPHandler)
     server.serve_forever()
-    server.server_close()
 
 if __name__ == "__main__":
     main()
