@@ -33,20 +33,10 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                 keyValues = response.queryToDictionary(path)
 
                 htmlString.append("<html>\n<body>")
+                htmlString.append("<h1>" + keyValues["name"][0] + "</h1>")
 
-                #get name
-                for pair in split:
-                    if pair.find("name") == 0:
-                        name = pair[pair.find("=")+1:]
-                        htmlString.append("<h1>" + name + "</h1>")
-
-                #get pics
-                for pair in split:
-                    if pair.find("images") == 0:
-                        requestedImages = pair[pair.find("=")+1:].split("+")
-
-                        for image in requestedImages:
-                            htmlString.append("<img src=image/" + image + ".jpg />")
+                for image in keyValues["images"]:
+                    htmlString.append("<img src=image/" + image + ".jpg />")
 
                 htmlString.append("</body>\n</html>")
 
@@ -56,7 +46,6 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                 with open("images.html", "r") as file:
                     r = file.read()
                     self.request.sendall(response.buildResponse200("text/html", len(r), r))
-
 
             except FileNotFoundError:
                 print("No image")
