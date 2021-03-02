@@ -16,7 +16,8 @@ p {
 
 button {
     font-style: italic;
-    color: wheat
+    color: wheat;
+    background-color: black;
 }
 
 img.border {
