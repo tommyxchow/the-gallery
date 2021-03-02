@@ -9,5 +9,6 @@ function loadImage(id){
 
 	var test = document.getElementById("display")
 	test.src = "/image/" + id + ".jpg"
+	test.className = "border"
 
 }

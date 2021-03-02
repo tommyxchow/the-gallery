@@ -5,17 +5,19 @@
 </head>
 <body>
 
-    <h1>Welcome To My Gallery!</h1>
+    <h1 class = red>Welcome To My Gallery!</h1>
 
     <p>Here are the art pieces we currently have on display:</p>
 
     <div>
-        <button class = test id = mona_lisa onclick = "loadImage(id)">Mona Lisa</button>
+        <button id = mona_lisa onclick = "loadImage(id)">Mona Lisa</button>
 
-        <button id = starry_night onclick = "loadImage(this.id)">Starry Night</button>
+        <button id = starry_night onclick = "loadImage(id)">Starry Night</button>
     
         <button id = girl_with_pearl_earring onclick = "loadImage(id)">Girl WIth a Pearl Earring</button>
     </div>
+
+    <div class = "gap"></div>
 
     <img id = display src ="">
 
