@@ -9,3 +9,20 @@ h1 {
     color: wheat;
     text-align: center;
 }
+
+p {
+    color: wheat
+}
+
+button {
+    font-style: italic;
+    color: wheat
+}
+
+img.border {
+    border: 3px solid wheat;
+}
+
+.gap {
+    padding: 5px;
+}
