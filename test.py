@@ -1,26 +1,18 @@
-test = "/images?images=cat+kitten+dog&name=Mitch"
-htmlString = []
+newHTML = []
+images = ["cat", "dog", "sheep"]
 
-split = test[test.find("?")+1:].split("&")
-print(split)
-print(split[0].split('='))
-print(split[0].split('+'))
+with open("images.html", "r") as file:
+    r = file.readlines()
+    for line in r:
+        if line.find("{{name}}") != -1:
+            newHTML.append(line.replace("{{name}}", "Mitch"))
+        elif line.find("{{loop}}") != -1:
+            for image in images:
+                newHTML.append("<img src=" + image + ">\n")
+        else:
+            newHTML.append(line)
 
-htmlString.append("<html>")
 
-#get name
-for pair in split:
-    if pair.find("name") == 0:
-        name = pair[pair.find("=")+1:]
-        htmlString.append("<h1>" + name + "</h1>")
-
-#get pics
-for pair in split:
-    if pair.find("images") == 0:
-        requestedImages = pair[pair.find("=")+1:].split("+")
-
-        for image in requestedImages:
-            htmlString.append("<img src=image/" + image + ".jpg />")
-
-htmlString.append("</html>")
+print("".join(newHTML))
+        
 
