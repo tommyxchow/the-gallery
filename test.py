@@ -14,5 +14,3 @@ with open("images.html", "r") as file:
 
 
 print("".join(newHTML))
-        
-

@@ -7,8 +7,6 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
         message = self.request.recv(1024).strip().decode().split('\r\n')
         path = response.getRequestPath(message[0])
         
-        print("REQUEST --- ", message)
-
         if path == "/":
             with open("index.html", "r") as file:
                 r = file.read()
@@ -23,6 +21,21 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
             with open("style.css", "r") as file:
                 r = file.read()
                 self.request.sendall(response.buildResponse200("text/css", len(r), r))
+
+        elif path == "/utf.txt":
+            with open("utf.txt", "rb") as file:
+                r = file.read()
+                self.request.sendall(response.buildResponseBinary("text/plain; charset=utf-8", r))
+
+        elif path[0:7] == "/image/":
+            try:
+                image = path[path.rfind('/'):]
+                with open("image" + image, "rb") as file:
+                    r = file.read()
+                    self.request.sendall(response.buildResponseBinary("image/jpeg; charset=utf-8", r))
+                    
+            except FileNotFoundError:
+                self.request.sendall(response.buildResponse404("text/plain", "Content not found :("))
 
         elif path[0:8] == "/images?":
 
@@ -49,21 +62,6 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                 print("No image")
                 self.request.sendall(response.buildResponse404("text/plain", "Content not found :("))
 
-
-        elif path[0:6] == "/image":
-            try:
-                image = path[path.rfind('/'):]
-                with open("image" + image, "rb") as file:
-                    r = file.read()
-                    self.request.sendall(response.buildResponseBinary("image/jpeg; charset=utf-8", r))
-                    
-            except FileNotFoundError:
-                self.request.sendall(response.buildResponse404("text/plain", "Content not found :("))
-
-        elif path == "/utf.txt":
-            with open("utf.txt", "rb") as file:
-                r = file.read()
-                self.request.sendall(response.buildResponseBinary("text/plain; charset=utf-8", r))
 
         elif path == "/hello":
             message = "Welcome, World! :)"
