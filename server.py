@@ -4,7 +4,7 @@ import functions as response
 
 class MyTCPHandler(socketserver.BaseRequestHandler):
     def handle(self):
-        message = self.request.recv(1024).strip().decode().split('\r\n')
+        message = self.request.recv(1024).#strip().decode().split('\r\n')
         path = response.getRequestPath(message[0])
         
         if path == "/":
@@ -32,7 +32,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                 image = path[path.rfind('/'):]
                 with open("image" + image, "rb") as file:
                     r = file.read()
-                    self.request.sendall(response.buildResponseBinary("image/jpeg; charset=utf-8", r))
+                    self.request.sendall(response.buildResponseBinary("image/jpeg", r))
                     
             except FileNotFoundError:
                 self.request.sendall(response.buildResponse404("text/plain", "Content not found :("))
