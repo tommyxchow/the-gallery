@@ -5,7 +5,7 @@
 </head>
 <body>
 
-    <h1 class = red>Welcome To My Gallery!</h1>
+    <h1>Welcome To My Gallery!</h1>
 
     <p>Here are the art pieces we currently have on display:</p>
 
@@ -20,6 +20,17 @@
     <div class = "gap"></div>
 
     <img id = display src ="">
+
+    <form action="/comment" id="comment-form" method="post" enctype="multipart/form-data">
+        <label for="text-form-name">Name: </label>
+        <input id="text-form-name" type="text" name="name"><br/>
+        <label for="form-comment">Comment: </label>
+        <input id="form-comment" type="text" name="comment">
+        <input type="submit" value="Submit">
+    </form>
+
+    <h2>Comments</h2>
+    <p hidden>{{loop}}</p>
 
 <script src="functions.js" ></script>
 </body>

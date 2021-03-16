@@ -1,6 +1,7 @@
 def getRequestPath(requestString):
+    start = requestString.find('/')
     end = requestString.rfind(' ')
-    return requestString[4: end]
+    return requestString[start:end]
 
 #encode string into a byte array and ship it
 def buildResponse200(mimeType, length, content):
@@ -36,3 +37,38 @@ def queryToDictionary(path):
                 kv[splitEquals[0]] = splitPlus
 
         return kv
+
+def formatRequest(requestArray):
+    kv = {}
+    for i in range(1, len(requestArray)):
+        keyEnd = requestArray[i].find(":")
+        key = requestArray[i][0:keyEnd]
+        value = requestArray[i][keyEnd+2:]
+        kv[key] = value
+    return kv
+
+def escapeHTML(string):
+    newString = string.replace('&', '&amp')
+    newString = newString.replace('<', '&lt')
+    newString = newString.replace('>', '&gt')
+
+    return newString
+
+def parseMultipart(formData, boundary):
+    kv = {}
+    split = formData.splitlines()
+
+    for i in range(0, len(split)):
+        if split[i] == boundary.encode():
+            headers = split[i+1].decode()
+            data = split[i+3]
+
+            key = escapeHTML(headers[headers.find("=")+1:].strip('"'))
+            kv[key] = escapeHTML(data.decode())
+
+    return kv
+
+
+
+
+
