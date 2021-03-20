@@ -13,6 +13,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
     def handle(self):
         req = self.request.recv(1024)
         message = req.decode().split('\r\n')
+        print(message[0])
 
         path = response.getRequestPath(message[0])
         requestLine = message[0].split(' ')
@@ -47,12 +48,11 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 
                     data = response.parseMultipart(contentBuffer, boundary)
                     
-                    self.uploadedImages[data['filename']] = data['comment']
+                    self.uploadedImages[data['filename']] = data['name']
 
                     with open('image/' + data['filename'] + '.jpg', "wb") as f:
                         f.write(data['upload'])
                     
-                    print(self.uploadedImages)
                     self.request.sendall(response.buildResponse301('/'))
                     
 

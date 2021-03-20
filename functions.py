@@ -99,7 +99,6 @@ def parseMultipart(buffer, boundary):
                         key = pair[:pair.find('=')]
                         kv[key] = name
 
-    print(kv)
     return kv
 
 
