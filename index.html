@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 <head>
     <title>The Gallery</title>
@@ -15,22 +16,46 @@
         <button id = starry_night onclick = "loadImage(id)">Starry Night</button>
     
         <button id = girl_with_pearl_earring onclick = "loadImage(id)">Girl WIth a Pearl Earring</button>
+
+        {{buttonLoop}}
     </div>
 
     <div class = "gap"></div>
 
-    <img id = display src ="">
+    <figure>
+        <img id = display src ="">
+        <figcaption id = caption>Test</figcaption>
+    </figure>
 
-    <form action="/comment" id="comment-form" method="post" enctype="multipart/form-data">
-        <label for="text-form-name">Name: </label>
-        <input id="text-form-name" type="text" name="name"><br/>
-        <label for="form-comment">Comment: </label>
-        <input id="form-comment" type="text" name="comment">
-        <input type="submit" value="Submit">
-    </form>
+    <h2>Upload</h2>
+
+    <div class = "form" id = "uploadForm">
+        <form action="/image-upload" id="image-form" method="post" enctype="multipart/form-data">
+            <label for="form-file">Image: </label>
+            <input id="form-file" type="file" name="upload">
+            <br/>
+            <label for="image-form-name">Caption: </label>
+            <input id="image-form-name" type="text" name="name">
+            <input type="submit" value="Submit">
+        </form>
+    </div>
+
+    <div class = "bigGap"></div>
 
     <h2>Comments</h2>
-    <p hidden>{{loop}}</p>
+
+    {{commentLoop}}
+    
+
+    <div class = "form" id = "commentForm">
+        <form action="/comment" id="comment-form" method="post" enctype="multipart/form-data">
+            <label for="text-form-name">Name: </label>
+            <input id="text-form-name" type="text" name="name"><br/>
+            <label for="form-comment">Comment: </label>
+            <input id="form-comment" type="text" name="comment">
+            <input type="submit" value="Submit">
+        </form>
+    </div>
 
 <script src="functions.js" ></script>
 </body>

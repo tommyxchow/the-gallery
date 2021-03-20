@@ -1,6 +1,6 @@
 body {
     background-color: black;
-    color: white;
+    color: wheat;
     text-align: center;
 }
 
@@ -19,10 +19,23 @@ button {
     background-color: black;
 }
 
-img.border {
+img.gallery {
     border: 3px solid wheat;
+    width: 25%;
+    height: auto;
 }
 
 .gap {
     padding: 5px;
+}
+
+.bigGap {
+    padding: 25px;
+}
+
+#uploadForm {
+
+}
+
+#commentForm {
 }

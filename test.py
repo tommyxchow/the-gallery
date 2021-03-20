@@ -1,8 +1,10 @@
 import functions as response
+import os
 
+test = '"test"'
+test2 = 'name="upload"; filename="dog.jpg"'
 
-html = '<h1>Heading 1</h1>'
-print(html.replace('&', '&amp'))
-print(html.replace('<', '&lt'))
-
-
+print(test2[:test2.find('=')])
+print(test2[4:10])
+    
+    

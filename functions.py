@@ -54,18 +54,52 @@ def escapeHTML(string):
 
     return newString
 
-def parseMultipart(formData, boundary):
+def escapeDIR(string: str):
+    newString = string.replace('.', '')
+    newString = newString.replace('/', '')
+    newString = newString.replace('~', '')
+
+    return newString
+
+def parseMultipart(buffer, boundary):
+    boundary = '--' + boundary
+    splitted = buffer.split('\r\n'.encode())
+
     kv = {}
-    split = formData.splitlines()
 
-    for i in range(0, len(split)):
-        if split[i] == boundary.encode():
-            headers = split[i+1].decode()
-            data = split[i+3]
+    for i, line in enumerate(splitted):
+        if line == boundary.encode():
 
-            key = escapeHTML(headers[headers.find("=")+1:].strip('"'))
-            kv[key] = escapeHTML(data.decode())
+            headers = splitted[i+1].decode().split('; ')
+            for pair in headers:
+                if ':' in pair:
+                    key = pair[:pair.find(':')]
+                    value = pair[pair.find(':')+2:]
 
+                    kv[key] = value
+
+                elif '=' in pair:
+                    name = pair[pair.find('=')+1:].strip('"')
+                    
+                    if name == "upload":
+                        #Put binary image into the dict
+                        start = buffer.index('\r\n\r\n'.encode()) + 4
+                        end = buffer.index(('\r\n' + boundary).encode())
+                        kv[name] = buffer[start:end]
+
+                        #Get content type into dict
+                        contentType = splitted[i+2].decode()
+                        contentType = contentType.split(': ')
+                        kv[contentType[0]] = contentType[1]
+
+                    elif name == "name" or name == "comment":
+                        kv[escapeHTML(name)] = escapeHTML(splitted[i+3].decode())
+
+                    else:
+                        key = pair[:pair.find('=')]
+                        kv[key] = name
+
+    print(kv)
     return kv
 
 

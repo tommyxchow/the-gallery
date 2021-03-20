@@ -4,7 +4,11 @@ import functions as response
 
 class MyTCPHandler(socketserver.BaseRequestHandler):
 
+    #TO DO: do CSS and HTMl image formatting and captions. Test putting HTML inside the caption input. Double check security inputs. 
+    #Fix the for loop caption handling stuff. (When uploading multiple images with no caption, weird things happen)
+
     comments = {}
+    uploadedImages = []
 
     def handle(self):
         req = self.request.recv(1024)
@@ -21,26 +25,36 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                 boundary = mappings['Content-Type'][mappings['Content-Type'].find('=')+1:]
                 contentBuffer = bytes()
 
+                #Keep recieving until we get all the content
                 while len(contentBuffer) <= contentLength:
                     if len(contentBuffer) > 0:
+                        req = self.request.recv(1024)
                         contentBuffer += req
                     elif '\r\n\r\n'.encode() in req and len(contentBuffer) == 0:
                         contentBuffer += req[req.find('\r\n\r\n'.encode())+2:]
                     else:
                         req = self.request.recv(1024)
-
-                print("RESULT:")
-                print(contentBuffer.strip().decode())
                 contentBuffer = contentBuffer.strip()
                 
                 if path == "/comment":
-                    formValues = response.parseMultipart(contentBuffer, '--' + boundary)
+                    formValues = response.parseMultipart(contentBuffer, boundary)
 
                     self.comments[formValues['name']] = formValues['comment']
 
                     self.request.sendall(response.buildResponse301('/'))
 
-                print(self.comments)
+                elif path == "/image-upload":
+
+                    data = response.parseMultipart(contentBuffer, boundary)
+                    
+                    self.uploadedImages.append(data['filename'])
+
+                    with open('image/' + data['filename'] + '.jpg', "wb") as f:
+                        f.write(data['upload'])
+
+                    self.request.sendall(response.buildResponse301('/'))
+                    
+
 
         elif requestType == "GET":
         
@@ -51,7 +65,11 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                     r = file.readlines()
 
                     for line in r:
-                        if line.find("{{loop}}") != -1:
+                        if line.find("{{buttonLoop}}") != -1:
+                            for imageName in self.uploadedImages:
+                                newButton = "<button id = {} onclick = 'loadImage(id)'>{}</button>".format(imageName, imageName)
+                                htmlString.append(newButton)
+                        elif line.find("{{commentLoop}}") != -1:
                             for name in self.comments:
                                 newComment = "<p>{} said {}</p>".format(name, self.comments[name])
                                 htmlString.append(newComment)
@@ -110,7 +128,6 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 
                 except FileNotFoundError:
                     self.request.sendall(response.buildResponse404("text/plain", "Content not found :("))
-
 
             elif path == "/hello":
                 responseMessage = "Welcome, World! :)"
