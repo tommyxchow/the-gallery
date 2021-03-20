@@ -22,10 +22,7 @@
 
     <div class = "gap"></div>
 
-    <figure>
-        <img id = display src ="">
-        <figcaption id = caption>Test</figcaption>
-    </figure>
+    <img id = display src ="">
 
     <h2>Upload</h2>
 
@@ -44,9 +41,6 @@
 
     <h2>Comments</h2>
 
-    {{commentLoop}}
-    
-
     <div class = "form" id = "commentForm">
         <form action="/comment" id="comment-form" method="post" enctype="multipart/form-data">
             <label for="text-form-name">Name: </label>
@@ -56,6 +50,8 @@
             <input type="submit" value="Submit">
         </form>
     </div>
+
+    {{commentLoop}}
 
 <script src="functions.js" ></script>
 </body>

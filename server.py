@@ -11,11 +11,13 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
     uploadedImages = {}
 
     def handle(self):
+        print(self.uploadedImages)
         req = self.request.recv(1024)
         message = req.decode().split('\r\n')
         print(message[0])
 
         path = response.getRequestPath(message[0])
+        print(path)
         requestLine = message[0].split(' ')
         requestType = requestLine[0]
 
@@ -42,7 +44,6 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 
                     self.comments[formValues['name']] = formValues['comment']
 
-                    self.request.sendall(response.buildResponse301('/'))
 
                 elif path == "/image-upload":
 
@@ -53,8 +54,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                     with open('image/' + data['filename'] + '.jpg', "wb") as f:
                         f.write(data['upload'])
                     
-                    self.request.sendall(response.buildResponse301('/'))
-                    
+                self.request.sendall(response.buildResponse301('/'))
 
 
         elif requestType == "GET":
@@ -68,8 +68,12 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                     for line in r:
                         if line.find("{{buttonLoop}}") != -1:
                             for imageName in self.uploadedImages:
-                                newButton = "<button id = {} onclick = 'loadImage(id)'>{}</button>".format(imageName, imageName)
-                                htmlString.append(newButton)
+                                if len(self.uploadedImages[imageName]) > 0:
+                                    newButton = "<button id = {} onclick = 'loadImage(id)'>{}</button>".format(imageName, self.uploadedImages[imageName])
+                                    htmlString.append(newButton)
+                                else:
+                                    newButton = "<button id = {} onclick = 'loadImage(id)'>{}</button>".format(imageName, imageName)
+                                    htmlString.append(newButton)
                         elif line.find("{{commentLoop}}") != -1:
                             for name in self.comments:
                                 newComment = "<p>{} said {}</p>".format(name, self.comments[name])
@@ -103,8 +107,8 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                         r = file.read()
                         self.request.sendall(response.buildResponseBinary("image/jpeg", r))
                         
-                except FileNotFoundError:
-                    self.request.sendall(response.buildResponse404("text/plain", "Content not found :("))
+                except Exception:
+                    self.request.sendall(response.buildResponse404("text/plain", "Image not found :("))
 
             elif path[0:8] == "/images?":
 
@@ -127,8 +131,8 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 
                     self.request.sendall(response.buildResponse200("text/html", len(buildString), buildString))
 
-                except FileNotFoundError:
-                    self.request.sendall(response.buildResponse404("text/plain", "Content not found :("))
+                except Exception:
+                    self.request.sendall(response.buildResponse404("text/plain", "An image not found :("))
 
             elif path == "/hello":
                 responseMessage = "Welcome, World! :)"
