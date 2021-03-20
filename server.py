@@ -8,7 +8,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
     #Fix the for loop caption handling stuff. (When uploading multiple images with no caption, weird things happen)
 
     comments = {}
-    uploadedImages = []
+    uploadedImages = {}
 
     def handle(self):
         req = self.request.recv(1024)
@@ -47,11 +47,12 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 
                     data = response.parseMultipart(contentBuffer, boundary)
                     
-                    self.uploadedImages.append(data['filename'])
+                    self.uploadedImages[data['filename']] = data['comment']
 
                     with open('image/' + data['filename'] + '.jpg', "wb") as f:
                         f.write(data['upload'])
-
+                    
+                    print(self.uploadedImages)
                     self.request.sendall(response.buildResponse301('/'))
                     
 
@@ -78,7 +79,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 
                 buildString = "".join(htmlString)
 
-                self.request.sendall(response.buildResponse200("text/html", len(buildString), buildString))            
+                self.request.sendall(response.buildResponse200("text/html", len(buildString), buildString))  
             
             elif path == "/functions.js":
                 with open("functions.js", "r") as file:
