@@ -13,13 +13,10 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
     tokens = []
 
     def handle(self):
-        print(self.uploadedImages)
         req = self.request.recv(1024)
         message = req.decode().split('\r\n')
-        print(message[0])
 
         path = response.getRequestPath(message[0])
-        print(path)
         requestLine = message[0].split(' ')
         requestType = requestLine[0]
 
@@ -54,7 +51,6 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                 elif path == "/image-upload":
 
                     data = response.parseMultipart(contentBuffer, boundary)
-                    print(data, self.tokens)
 
                     if data['token'] in self.tokens:
                         self.uploadedImages[data['filename']] = data['name']
