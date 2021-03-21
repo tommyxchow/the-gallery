@@ -1,6 +1,7 @@
 import socketserver
 import sys
 import functions as response
+import random
 
 class MyTCPHandler(socketserver.BaseRequestHandler):
 
@@ -9,6 +10,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 
     comments = {}
     uploadedImages = {}
+    tokens = []
 
     def handle(self):
         print(self.uploadedImages)
@@ -41,20 +43,29 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                 
                 if path == "/comment":
                     formValues = response.parseMultipart(contentBuffer, boundary)
-
-                    self.comments[formValues['name']] = formValues['comment']
+                    if formValues['token'] in self.tokens:
+                        self.comments[formValues['name']] = formValues['comment']
+                        self.tokens.remove(formValues['token'])
+                        self.request.sendall(response.buildResponse301('/'))
+                    else:
+                        self.request.sendall(response.buildResponse404("text/plain", "Invalid token!"))
 
 
                 elif path == "/image-upload":
 
                     data = response.parseMultipart(contentBuffer, boundary)
-                    
-                    self.uploadedImages[data['filename']] = data['name']
+                    print(data, self.tokens)
 
-                    with open('image/' + data['filename'] + '.jpg', "wb") as f:
-                        f.write(data['upload'])
-                    
-                self.request.sendall(response.buildResponse301('/'))
+                    if data['token'] in self.tokens:
+                        self.uploadedImages[data['filename']] = data['name']
+
+                        with open('image/' + data['filename'] + '.jpg', "wb") as f:
+                            f.write(data['upload'])
+
+                        self.tokens.remove(data['token'])
+                        self.request.sendall(response.buildResponse301('/'))
+                    else:
+                        self.request.sendall(response.buildResponse404("text/plain", "Invalid token!"))
 
 
         elif requestType == "GET":
@@ -78,6 +89,13 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                             for name in self.comments:
                                 newComment = "<p>{} said {}</p>".format(name, self.comments[name])
                                 htmlString.append(newComment)
+
+                        #Generate random token
+                        elif line.find("token") != -1:
+                            newToken = random.random()
+                            self.tokens.append(str(newToken))
+                            token = '<input hidden id="random-token" type="text" name="token" value={}>'.format(newToken)
+                            htmlString.append(token)
                         else:
                             htmlString.append(line)
 

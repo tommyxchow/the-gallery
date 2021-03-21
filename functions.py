@@ -92,7 +92,7 @@ def parseMultipart(buffer, boundary):
                         contentType = contentType.split(': ')
                         kv[contentType[0]] = contentType[1]
 
-                    elif name == "name" or name == "comment":
+                    elif name == "name" or name == "comment" or name == "token":
                         kv[escapeHTML(name)] = escapeHTML(splitted[i+3].decode())
 
                     else:
