@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>The Gallery</title>
-    <link rel="stylesheet" type="text/css" href="style.css"/>
+    <link rel="stylesheet" type="text/css" href="style.css" />
 </head>
+
 <body>
 
     <h1>Welcome To My Gallery!</h1>
@@ -11,26 +13,26 @@
     <p>Here are the art pieces we currently have on display:</p>
 
     <div>
-        <button id = mona_lisa onclick = "loadImage(id)">Mona Lisa</button>
+        <button id=mona_lisa onclick="loadImage(id)">Mona Lisa</button>
 
-        <button id = starry_night onclick = "loadImage(id)">Starry Night</button>
-    
-        <button id = girl_with_pearl_earring onclick = "loadImage(id)">Girl WIth a Pearl Earring</button>
+        <button id=starry_night onclick="loadImage(id)">Starry Night</button>
+
+        <button id=girl_with_pearl_earring onclick="loadImage(id)">Girl WIth a Pearl Earring</button>
 
         {{buttonLoop}}
     </div>
 
-    <div class = "gap"></div>
+    <div class="gap"></div>
 
-    <img id = display src ="">
+    <img id=display src="">
 
     <h2>Upload</h2>
 
-    <div class = "form" id = "uploadForm">
+    <div class="form" id="uploadForm">
         <form action="/image-upload" id="image-form" method="post" enctype="multipart/form-data">
             <label for="form-file">Image: </label>
             <input id="form-file" type="file" name="upload">
-            <br/>
+            <br />
             <label for="image-form-name">Caption: </label>
             <input id="image-form-name" type="text" name="name">
             <input type="submit" value="Submit">
@@ -38,14 +40,14 @@
         </form>
     </div>
 
-    <div class = "bigGap"></div>
+    <div class="bigGap"></div>
 
     <h2>Comments</h2>
 
-    <div class = "form" id = "commentForm">
+    <div class="form" id="commentForm">
         <form action="/comment" id="comment-form" method="post" enctype="multipart/form-data">
             <label for="text-form-name">Name: </label>
-            <input id="text-form-name" type="text" name="name"><br/>
+            <input id="text-form-name" type="text" name="name"><br />
             <label for="form-comment">Comment: </label>
             <input id="form-comment" type="text" name="comment">
             <input type="submit" value="Submit">
@@ -55,6 +57,7 @@
 
     {{commentLoop}}
 
-<script src="functions.js" ></script>
+    <script src="functions.js"></script>
 </body>
+
 </html>

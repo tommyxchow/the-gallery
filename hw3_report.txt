@@ -33,12 +33,13 @@ image, and caption. I then write the image into the image folder, which
 contains all the public images that can be accessed by 
 /image/<image_name>.jpg.
 
-To prevent users from accessing files from other directories, I have conditionals
-and presets that only allow files to be accessed from the image folder (the
-python file open has "image/" prepended to the image name). Furthermore, if
-a user requests a url like /image/~/.ssh/id_rsa, I only look past the
-right-most "/" for the image name, so the resulting request will be /image/id_rsa.
-Obviously, this file won't exist on the system so a 404 will be returned.
+To prevent users from accessing files from other directories, I have 
+conditionals and presets that only allow files to be accessed from the 
+image folder (the python file open has "image/" prepended to the image name). 
+Furthermore, if a user requests a url like /image/~/.ssh/id_rsa, I only look 
+past the right-most "/" for the image name, so the resulting request will be 
+/image/id_rsa. Obviously, this file won't exist on the system so a 404 will 
+be returned.
 
 ---Objective 4---
 To host all the images, I have the uploaded images stored in a dictionary of
@@ -50,7 +51,7 @@ Any captions also have their HTML escaped already inside the "parseMultipart" fu
 
 
 ---Bonus Objective---
-Everytime the homepage is loaded, a random float is generated as the token. This token
-is then stored into a list containing all valid tokens. When an image or comment is
-submitted, the token is checked against the valid tokens, proceeding if it is in the list
-and returning an error if it is not.
+Everytime the homepage is loaded, a random float is generated as the token. 
+This token is then stored into a list containing all valid tokens. When an 
+image or comment is submitted, the token is checked against the valid tokens, 
+proceeding if it is in the list and returning an error if it is not.

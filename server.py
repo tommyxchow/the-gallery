@@ -1,12 +1,11 @@
 import socketserver
-import sys
 import functions as response
 import random
 
 class MyTCPHandler(socketserver.BaseRequestHandler):
 
-    #TO DO: do CSS and HTMl image formatting and captions. Test putting HTML inside the caption input. Double check security inputs. 
-    #Fix the for loop caption handling stuff. (When uploading multiple images with no caption, weird things happen)
+    # TO DO: do CSS and HTMl image formatting and captions. Test putting HTML inside the caption input. Double check security inputs. 
+    # Fix the for loop caption handling stuff. (When uploading multiple images with no caption, weird things happen)
 
     comments = {}
     uploadedImages = {}
@@ -23,49 +22,46 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
         mappings = response.formatRequest(message)
 
         if requestType == "POST":
-                contentLength = int(mappings['Content-Length'])
-                boundary = mappings['Content-Type'][mappings['Content-Type'].find('=')+1:]
-                contentBuffer = bytes()
+            contentLength = int(mappings['Content-Length'])
+            boundary = mappings['Content-Type'][mappings['Content-Type'].find('=')+1:]
+            contentBuffer = bytes()
 
-                #Keep recieving until we get all the content
-                while len(contentBuffer) <= contentLength:
-                    if len(contentBuffer) > 0:
-                        req = self.request.recv(1024)
-                        contentBuffer += req
-                    elif '\r\n\r\n'.encode() in req and len(contentBuffer) == 0:
-                        contentBuffer += req[req.find('\r\n\r\n'.encode())+2:]
-                    else:
-                        req = self.request.recv(1024)
-                contentBuffer = contentBuffer.strip()
-                
-                if path == "/comment":
-                    formValues = response.parseMultipart(contentBuffer, boundary)
-                    if formValues['token'] in self.tokens:
-                        self.comments[formValues['name']] = formValues['comment']
-                        self.tokens.remove(formValues['token'])
-                        self.request.sendall(response.buildResponse301('/'))
-                    else:
-                        self.request.sendall(response.buildResponse404("text/plain", "Invalid token!"))
+            # Keep recieving until we get all the content
+            while len(contentBuffer) <= contentLength:
+                if len(contentBuffer) > 0:
+                    req = self.request.recv(1024)
+                    contentBuffer += req
+                elif '\r\n\r\n'.encode() in req and len(contentBuffer) == 0:
+                    contentBuffer += req[req.find('\r\n\r\n'.encode())+2:]
+                else:
+                    req = self.request.recv(1024)
+            contentBuffer = contentBuffer.strip()
 
+            if path == "/comment":
+                formValues = response.parseMultipart(contentBuffer, boundary)
+                if formValues['token'] in self.tokens:
+                    self.comments[formValues['name']] = formValues['comment']
+                    self.tokens.remove(formValues['token'])
+                    self.request.sendall(response.buildResponse301('/'))
+                else:
+                    self.request.sendall(response.buildResponse404("text/plain", "Invalid token!"))
 
-                elif path == "/image-upload":
+            elif path == "/image-upload":
+                data = response.parseMultipart(contentBuffer, boundary)
 
-                    data = response.parseMultipart(contentBuffer, boundary)
+                if data['token'] in self.tokens:
+                    self.uploadedImages[data['filename']] = data['name']
 
-                    if data['token'] in self.tokens:
-                        self.uploadedImages[data['filename']] = data['name']
+                    with open('image/' + data['filename'] + '.jpg', "wb") as f:
+                        f.write(data['upload'])
 
-                        with open('image/' + data['filename'] + '.jpg', "wb") as f:
-                            f.write(data['upload'])
-
-                        self.tokens.remove(data['token'])
-                        self.request.sendall(response.buildResponse301('/'))
-                    else:
-                        self.request.sendall(response.buildResponse404("text/plain", "Invalid token!"))
-
+                    self.tokens.remove(data['token'])
+                    self.request.sendall(response.buildResponse301('/'))
+                else:
+                    self.request.sendall(response.buildResponse404("text/plain", "Invalid token!"))
 
         elif requestType == "GET":
-        
+
             if path == "/":
 
                 htmlString = []
@@ -152,13 +148,14 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                 responseMessage = "Welcome, World! :)"
                 self.request.sendall(response.buildResponse200("text/plain", len(responseMessage), responseMessage))
 
-            #301 Redirect
+            # 301 Redirect
             elif path == "/hi":
                 self.request.sendall(response.buildResponse301("/hello"))
 
-            #Return 404
+            # Return 404
             else:
                 self.request.sendall(response.buildResponse404("text/plain", "Content not found :("))
+
 
 def main():
     host = "0.0.0.0"
@@ -167,5 +164,7 @@ def main():
     server = socketserver.ThreadingTCPServer((host, port), MyTCPHandler)
     server.serve_forever()
 
+
 if __name__ == "__main__":
     main()
+    

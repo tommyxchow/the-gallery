@@ -1,4 +1,4 @@
-function loadImage(id){
+function loadImage(id) {
 	console.log(id)
 	document.getElementsByName
 	var imageName = document.getElementById(id).innerHTML

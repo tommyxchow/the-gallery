@@ -3,21 +3,25 @@ def getRequestPath(requestString):
     end = requestString.rfind(' ')
     return requestString[start:end]
 
-#encode string into a byte array and ship it
+
+# encode string into a byte array and ship it
 def buildResponse200(mimeType, length, content):
     httpResponse = "HTTP/1.1 200 OK\r\nContent-Type: {}\r\nContent-Length: {}\r\nX-Content-Type-Options: nosniff\r\n\r\n{}".format(mimeType, length, content)
 
     return httpResponse.encode()
+
 
 def buildResponse301(path):
     httpResponse = "HTTP/1.1 301 Moved Permanently\r\nLocation: {}\r\nX-Content-Type-Options: nosniff\r\n\r\n".format(path)
 
     return httpResponse.encode()
 
+
 def buildResponse404(mimeType, errorMessage):
     httpResponse = "HTTP/1.1 404 Not Found\r\nContent-Type: {}\r\nContent-Length: {}\r\nX-Content-Type-Options: nosniff\r\n\r\n{}\r\n\r\n".format(mimeType, len(errorMessage), errorMessage)
 
     return httpResponse.encode()
+
 
 def buildResponseBinary(mimeType, bArray):
     httpResponse = "HTTP/1.1 200 OK\r\nContent-Type: {}\r\nContent-Length: {}\r\nX-Content-Type-Options: nosniff\r\n\r\n".format(mimeType, len(bArray))
@@ -25,6 +29,7 @@ def buildResponseBinary(mimeType, bArray):
     httpResponse = httpResponse.encode() + bArray
 
     return httpResponse
+
 
 def queryToDictionary(path):
     if path.find("=") != -1:
@@ -38,6 +43,7 @@ def queryToDictionary(path):
 
         return kv
 
+
 def formatRequest(requestArray):
     kv = {}
     for i in range(1, len(requestArray)):
@@ -47,6 +53,7 @@ def formatRequest(requestArray):
         kv[key] = value
     return kv
 
+
 def escapeHTML(string):
     newString = string.replace('&', '&amp')
     newString = newString.replace('<', '&lt')
@@ -54,12 +61,14 @@ def escapeHTML(string):
 
     return newString
 
-def escapeDIR(string: str):
+
+def escapeDIR(string):
     newString = string.replace('.', '')
     newString = newString.replace('/', '')
     newString = newString.replace('~', '')
 
     return newString
+
 
 def parseMultipart(buffer, boundary):
     boundary = '--' + boundary
@@ -80,14 +89,14 @@ def parseMultipart(buffer, boundary):
 
                 elif '=' in pair:
                     name = pair[pair.find('=')+1:].strip('"')
-                    
+
                     if name == "upload":
-                        #Put binary image into the dict
+                        # Put binary image into the dict
                         start = buffer.index('\r\n\r\n'.encode()) + 4
                         end = buffer.index(('\r\n' + boundary).encode())
                         kv[name] = buffer[start:end]
 
-                        #Get content type into dict
+                        # Get content type into dict
                         contentType = splitted[i+2].decode()
                         contentType = contentType.split(': ')
                         kv[contentType[0]] = contentType[1]
@@ -100,8 +109,3 @@ def parseMultipart(buffer, boundary):
                         kv[key] = name
 
     return kv
-
-
-
-
-
