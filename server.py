@@ -44,7 +44,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                     self.tokens.remove(formValues['token'])
                     self.request.sendall(response.buildResponse301('/'))
                 else:
-                    self.request.sendall(response.buildResponse404("text/plain", "Invalid token!"))
+                    self.request.sendall(response.buildResponse403("text/plain", "Invalid token!"))
 
             elif path == "/image-upload":
                 data = response.parseMultipart(contentBuffer, boundary)
@@ -58,7 +58,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                     self.tokens.remove(data['token'])
                     self.request.sendall(response.buildResponse301('/'))
                 else:
-                    self.request.sendall(response.buildResponse404("text/plain", "Invalid token!"))
+                    self.request.sendall(response.buildResponse403("text/plain", "Invalid token!"))
 
         elif requestType == "GET":
 
@@ -167,4 +167,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    

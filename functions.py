@@ -17,6 +17,12 @@ def buildResponse301(path):
     return httpResponse.encode()
 
 
+def buildResponse403(mimeType, errorMessage):
+    httpResponse = "HTTP/1.1 403 Forbidden\r\nContent-Type: {}\r\nContent-Length: {}\r\nX-Content-Type-Options: nosniff\r\n\r\n{}\r\n\r\n".format(mimeType, len(errorMessage), errorMessage)
+
+    return httpResponse.encode()
+
+
 def buildResponse404(mimeType, errorMessage):
     httpResponse = "HTTP/1.1 404 Not Found\r\nContent-Type: {}\r\nContent-Length: {}\r\nX-Content-Type-Options: nosniff\r\n\r\n{}\r\n\r\n".format(mimeType, len(errorMessage), errorMessage)
 
