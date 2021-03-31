@@ -54,7 +54,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                 if data['token'] in self.tokens:
                     self.uploadedImages[data['filename']] = data['name']
 
-                    with open('image/' + data['filename'] + '.jpg', "wb") as f:
+                    with open('image/' + data['filename'], "wb") as f:
                         f.write(data['upload'])
 
                     self.tokens.remove(data['token'])
