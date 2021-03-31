@@ -7,6 +7,8 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
     # TO DO: do CSS and HTMl image formatting and captions. Test putting HTML inside the caption input. Double check security inputs. 
     # Fix the for loop caption handling stuff. (When uploading multiple images with no caption, weird things happen)
 
+    # TO DO: When uploading images, it adds an additional .jpg to the end.
+
     comments = {}
     uploadedImages = {}
     tokens = []
