@@ -1,25 +1,27 @@
 import socketserver
 import functions as response
 import random
+import hashlib
+import base64
+
 
 class MyTCPHandler(socketserver.BaseRequestHandler):
-
-    # TO DO: do CSS and HTMl image formatting and captions. Test putting HTML inside the caption input. Double check security inputs. 
-    # Fix the for loop caption handling stuff. (When uploading multiple images with no caption, weird things happen)
-
-    # TO DO: When uploading images, it adds an additional .jpg to the end.
 
     comments = {}
     uploadedImages = {}
     tokens = []
 
     def handle(self):
+        # Recieve the next message, decode, and split.
         req = self.request.recv(1024)
         message = req.decode().split('\r\n')
+        print(req)
+        print(message)
 
-        path = response.getRequestPath(message[0])
+        # Get the request type & path
         requestLine = message[0].split(' ')
         requestType = requestLine[0]
+        path = requestLine[1]
 
         mappings = response.formatRequest(message)
 
@@ -37,6 +39,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                     contentBuffer += req[req.find('\r\n\r\n'.encode())+2:]
                 else:
                     req = self.request.recv(1024)
+
             contentBuffer = contentBuffer.strip()
 
             if path == "/comment":
@@ -45,27 +48,21 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                     self.comments[formValues['name']] = formValues['comment']
                     self.tokens.remove(formValues['token'])
                     self.request.sendall(response.buildResponse301('/'))
-                else:
-                    self.request.sendall(response.buildResponse403("text/plain", "Invalid token!"))
 
             elif path == "/image-upload":
                 data = response.parseMultipart(contentBuffer, boundary)
-
                 if data['token'] in self.tokens:
                     self.uploadedImages[data['filename']] = data['name']
-
                     with open('image/' + data['filename'], "wb") as f:
                         f.write(data['upload'])
-
                     self.tokens.remove(data['token'])
                     self.request.sendall(response.buildResponse301('/'))
-                else:
-                    self.request.sendall(response.buildResponse403("text/plain", "Invalid token!"))
+
+            self.request.sendall(response.buildResponse403("text/plain", "Invalid token!"))
 
         elif requestType == "GET":
 
             if path == "/":
-
                 htmlString = []
                 with open("index.html", "r") as file:
                     r = file.readlines()
@@ -74,17 +71,16 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                         if line.find("{{buttonLoop}}") != -1:
                             for imageName in self.uploadedImages:
                                 if len(self.uploadedImages[imageName]) > 0:
-                                    newButton = "<button id = {} onclick = 'loadImage(id)'>{}</button>".format(imageName, self.uploadedImages[imageName])
+                                    newButton = "<button id = {0} onclick = 'loadImage(id)'>{1}</button>".format(imageName, self.uploadedImages[imageName])
                                     htmlString.append(newButton)
                                 else:
-                                    newButton = "<button id = {} onclick = 'loadImage(id)'>{}</button>".format(imageName, imageName)
+                                    newButton = "<button id = {0} onclick = 'loadImage(id)'>{1}</button>".format(imageName, imageName)
                                     htmlString.append(newButton)
                         elif line.find("{{commentLoop}}") != -1:
                             for name in self.comments:
-                                newComment = "<p>{} said {}</p>".format(name, self.comments[name])
+                                newComment = "<p>{0} said {1}</p>".format(name, self.comments[name])
                                 htmlString.append(newComment)
-
-                        #Generate random token
+                        # Generate random token
                         elif line.find("token") != -1:
                             newToken = random.random()
                             self.tokens.append(str(newToken))
@@ -96,6 +92,16 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                 buildString = "".join(htmlString)
 
                 self.request.sendall(response.buildResponse200("text/html", len(buildString), buildString))  
+
+            elif path == '/websocket':
+                
+                webSocketKey = mappings['Sec-WebSocket-Key'] + '258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
+                sha1Hash = hashlib.sha1(webSocketKey.encode()).digest()
+                webSocketAccept = base64.encodebytes(sha1Hash).decode()
+
+                self.request.sendall(response.buildResponse101(webSocketAccept))
+                
+
             
             elif path == "/functions.js":
                 with open("functions.js", "r") as file:

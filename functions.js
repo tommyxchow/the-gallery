@@ -1,3 +1,5 @@
+socket = new WebSocket('ws://' + window.location.host + '/websocket');
+
 function loadImage(id) {
 	document.getElementsByName
 	var imageName = document.getElementById(id).innerHTML

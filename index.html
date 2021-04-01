@@ -57,6 +57,21 @@
 
     {{commentLoop}}
 
+    <div class="bigGap"></div>
+
+    <h2>Chat</h2>
+
+    <div class="chat" id="chatInput">
+        <label for="chat-name">Name: </label>
+        <input id="chat-name" type="text" name="name">
+        <br />
+        <label for="chat-comment">Comment: </label>
+        <input id="chat-comment" type="text" name="comment">
+        <button onclick="sendMessage()">Chat</button>
+    </div>
+
+    <div id="chat"></div>
+
     <script src="functions.js"></script>
 </body>
 

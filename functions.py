@@ -1,9 +1,3 @@
-def getRequestPath(requestString):
-    start = requestString.find('/')
-    end = requestString.rfind(' ')
-    return requestString[start:end]
-
-
 # encode string into a byte array and ship it
 def buildResponse200(mimeType, length, content):
     httpResponse = "HTTP/1.1 200 OK\r\nContent-Type: {}\r\nContent-Length: {}\r\nX-Content-Type-Options: nosniff\r\n\r\n{}".format(mimeType, length, content)
@@ -35,6 +29,10 @@ def buildResponseBinary(mimeType, bArray):
     httpResponse = httpResponse.encode() + bArray
 
     return httpResponse
+
+def buildResponse101(webSocketAccept):
+    httpResponse = "HTTP/1.1 101 Switching Protocols\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Accept:{}\r\n\r\n".format(webSocketAccept)
+    return httpResponse.encode()
 
 
 def queryToDictionary(path):
