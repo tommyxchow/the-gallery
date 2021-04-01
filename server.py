@@ -16,7 +16,6 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
         req = self.request.recv(1024)
         message = req.decode().split('\r\n')
         print(req)
-        print(message)
 
         # Get the request type & path
         requestLine = message[0].split(' ')
@@ -97,9 +96,18 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                 
                 webSocketKey = mappings['Sec-WebSocket-Key'] + '258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
                 sha1Hash = hashlib.sha1(webSocketKey.encode()).digest()
-                webSocketAccept = base64.encodebytes(sha1Hash).decode()
+                webSocketAccept = base64.b64encode(sha1Hash).decode()
 
                 self.request.sendall(response.buildResponse101(webSocketAccept))
+
+                try:
+                    while(True):
+                        recieved_data = self.request.recv(1024)
+                        print(recieved_data)
+                except:
+                    pass
+
+
                 
 
             
