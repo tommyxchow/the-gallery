@@ -10,12 +10,13 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
     comments = {}
     uploadedImages = {}
     tokens = []
+    clients = []
+    client_sockets = []
 
     def handle(self):
         # Recieve the next message, decode, and split.
         req = self.request.recv(1024)
         message = req.decode().split('\r\n')
-        print(req)
 
         # Get the request type & path
         requestLine = message[0].split(' ')
@@ -101,9 +102,97 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                 self.request.sendall(response.buildResponse101(webSocketAccept))
 
                 try:
-                    while(True):
+                    while True:
                         recieved_data = self.request.recv(1024)
                         print(recieved_data)
+
+                        client_id = self.client_address[0] + ':' + str(self.client_address[1])
+                        self.clients.append(client_id)
+                        self.client_sockets.append(self.request)
+                        print(self.clients)
+                        print(self.client_sockets)
+
+                        binaryList = []
+                        
+                        x = 0
+                        for i in recieved_data:
+                            v = format(i, 'b').zfill(8)
+                            binaryList.append(v)
+                            print(v, ' ', end='')
+                            x += 1
+                            if x == 4:
+                                print('\n')
+                                x = 0
+                        print("END")
+
+                        opcode = int(str(binaryList[0][4:]), 2)
+                        
+                        mask = int(binaryList[1][0])
+                        maskingKey = None
+                        payloadLength =int(str(binaryList[1][1:]), 2)
+                        payloadData = ''.join(binaryList[6:])
+
+                        if mask == 1:
+                            maskingKey = ''.join(binaryList[2:6])
+
+                        if payloadLength == 126:
+                            payloadLength == int(''.join(binaryList[2:4]), 2)
+                            maskingKey = ''.join(binaryList[4:8])
+                            payloadData = ''.join(binaryList[8:])
+                        
+                        elif payloadLength == 127:
+                            payloadLength = int(''.join(binaryList[2:10]), 2)
+                            maskingKey = ''.join(binaryList[10:14])
+                            payloadData = ''.join(binaryList[14:])
+
+
+                        binaryPayload = ''
+                        for i, elem in enumerate(payloadData):
+                            maskIndex = i % 32
+                            binaryPayload += str(int(maskingKey[maskIndex]) ^ int(elem))
+
+                        print(len(binaryPayload))
+                        
+                        
+                        finalMessage = bytearray()
+                        buffer = ''
+                        n = 0
+                        print(binaryPayload)
+                        for i in binaryPayload:
+                            buffer += i
+                            n += 1
+                            # Test for not divisible by 8
+                            if n == 8:
+                                finalMessage.append(int(buffer, 2))
+                                n = 0
+                                buffer = ''
+                                
+                        print(len(finalMessage))
+
+                        # for i in finalMessage:
+                        #     print(format(i, 'b').zfill(8), end='')
+                        
+                        print('\n')
+
+                        print(finalMessage)
+
+                        responseFrame = bytearray()
+
+                        responseFrame.append(int('10000001', 2))
+
+                        if len(finalMessage) < 126:
+                            length = format(len(finalMessage), 'b').zfill(8)
+                            print(length)
+                            responseFrame.append(int(length, 2))
+                            responseFrame += finalMessage
+
+                        print(responseFrame)
+
+                        self.request.sendall(responseFrame)
+                        
+
+
+
                 except:
                     pass
 

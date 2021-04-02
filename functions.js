@@ -29,6 +29,7 @@ function sendMessage() {
 
 // Called when the server sends a new message over the WebSocket and renders that message so the user can read it
 function addMessage(message) {
+	console.log(message)
 	const chatMessage = JSON.parse(message.data);
 	let chat = document.getElementById('chat');
 	chat.innerHTML += "<b>" + chatMessage['username'] + "</b>: " + chatMessage["comment"] + "<br/>";
