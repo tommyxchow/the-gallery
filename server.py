@@ -103,6 +103,9 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 
                 self.client_sockets.append(self.request)
 
+                for msg in self.messages:
+                    self.request.sendall(response.buildWSFrame(msg))
+
                 try:
                     while True:
                         recieved_data = self.request.recv(1024)
@@ -162,38 +165,13 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 
                             self.messages.append(finalMessage)
                             
-                            # Prepare the frame that will be sent back
-                            responseFrame = bytearray()
-                            # Add the 10000001 header bits
-                            responseFrame.append(129)
-
-                            print(len(finalMessage))
-
-                            # For payload less than 126, just append the length
-                            if payloadLength < 126:
-                                responseFrame.append(len(finalMessage))
-                            
-                            # For payload greater than 125, append the 2 length bytes
-                            elif payloadLength == 126:
-                                responseFrame.append(126)
-                                binaryLength = format(len(finalMessage), 'b').zfill(16)
-                                byte1 = binaryLength[0:8]
-                                byte2 = binaryLength[8:]
-
-                                responseFrame.append(int(byte1, 2))
-                                responseFrame.append(int(byte2, 2))
-
-                            # Append message byte array
-                            responseFrame += finalMessage
-
-
-                            print("RESPONSE FRAME: ", responseFrame)
-                            print('\n')
                             # Send the frame to each socket
                             for r in self.client_sockets:
-                                r.sendall(responseFrame)
+                                r.sendall(response.buildWSFrame(finalMessage))
 
                 except:
+                    print("CLOSE")
+                    self.client_sockets.remove(self.request)
                     pass
 
             elif path == "/functions.js":
