@@ -113,3 +113,27 @@ def parseMultipart(buffer, boundary):
                         kv[key] = name
 
     return kv
+
+def buildWSFrame(payload):
+    responseFrame = bytearray()
+    payloadLength = len(payload)
+
+    # For payload less than 126, just append the length
+    if payloadLength < 126:
+        responseFrame.append(len(payload))
+    
+    # For payload greater than 125, append the 2 length bytes
+    else:
+        responseFrame.append(126)
+        binaryLength = format(len(payload), 'b').zfill(16)
+        byte1 = binaryLength[0:8]
+        byte2 = binaryLength[8:]
+
+        responseFrame.append(int(byte1, 2))
+        responseFrame.append(int(byte2, 2))
+
+    # Append message byte array
+    responseFrame += payload
+
+
+    return responseFrame

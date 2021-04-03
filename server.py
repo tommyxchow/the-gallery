@@ -10,8 +10,8 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
     comments = {}
     uploadedImages = {}
     tokens = []
-    # clients = []
     client_sockets = []
+    messages = []
 
     def handle(self):
         # Recieve the next message, decode, and split.
@@ -101,17 +101,11 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 
                 self.request.sendall(response.buildResponse101(webSocketAccept))
 
-                # client_id = self.client_address[0] + ':' + str(self.client_address[1])
-                # self.clients.append(client_id)
-
-                req = self.request
-                self.client_sockets.append(req)
-                print(self.client_sockets)
+                self.client_sockets.append(self.request)
 
                 try:
                     while True:
                         recieved_data = self.request.recv(1024)
-                        print(recieved_data)
 
                         binaryList = []
                         
@@ -119,64 +113,67 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                             v = format(i, 'b').zfill(8)
                             binaryList.append(v)
 
-                        finBit = binaryList[0][0]
-                        print('FINBIT IS: ', finBit)
                         opcode = int(str(binaryList[0][4:]), 2)
 
                         if opcode == 1:
+                            # Get appropriate metadata
                             mask = int(binaryList[1][0])
                             maskingKey = None
-                            payloadLength =int(str(binaryList[1][1:]), 2)
+                            payloadLength = int(str(binaryList[1][1:]), 2)
                             payloadData = ''.join(binaryList[6:])
 
+                            # If the masking bit is set, get the masking key
                             if mask == 1:
                                 maskingKey = ''.join(binaryList[2:6])
 
+                            # If payload is 126, get the extended length, update masking key, update payload
                             if payloadLength == 126:
                                 print("PAYLOAD 126")
                                 payloadLength == int(''.join(binaryList[2:4]), 2)
                                 maskingKey = ''.join(binaryList[4:8])
                                 payloadData = ''.join(binaryList[8:])
-                            
-                            elif payloadLength == 127:
-                                print("PAYLOAD 127")
-                                payloadLength = int(''.join(binaryList[2:10]), 2)
-                                maskingKey = ''.join(binaryList[10:14])
-                                payloadData = ''.join(binaryList[14:])
 
-                            print('PAYLOAD LENGTH:', payloadLength)
-
+                            # Unmask the payload to get the binary representation of the message
                             # Can also get 4 bytes of the mask in an array and mod 4 for every byte
                             binaryPayload = ''
                             for i, elem in enumerate(payloadData):
                                 maskIndex = i % 32
-                                binaryPayload += str(int(maskingKey[maskIndex]) ^ int(elem))                            
-                            
+                                binaryPayload += str(int(maskingKey[maskIndex]) ^ int(elem))
+
+                            # Convert the binary message to an encoded byte array
                             finalMessage = bytearray()
                             buffer = ''
                             n = 0
                             for i in binaryPayload:
                                 buffer += i
                                 n += 1
-                                # Test for not divisible by 8
                                 if n == 8:
-                                    finalMessage.append(int(buffer, 2))
+                                    char = [int(buffer, 2)]
+                                    # Escape any HTML characters
+                                    if char[0] == 38:
+                                        char = [38, 97, 109, 112]
+                                    elif char[0] == 60:
+                                        char = [38, 108, 116]
+                                    elif char[0] == 62:
+                                        char = [38, 103, 116]
+                                    finalMessage.extend(char)
                                     n = 0
                                     buffer = ''
-                                    
-                            # for i in finalMessage:
-                            #     print(format(i, 'b').zfill(8), end='')
-                            
-                            responseFrame = bytearray()
 
+                            self.messages.append(finalMessage)
+                            
+                            # Prepare the frame that will be sent back
+                            responseFrame = bytearray()
+                            # Add the 10000001 header bits
                             responseFrame.append(129)
 
                             print(len(finalMessage))
 
+                            # For payload less than 126, just append the length
                             if payloadLength < 126:
                                 responseFrame.append(len(finalMessage))
-                                responseFrame += finalMessage
                             
+                            # For payload greater than 125, append the 2 length bytes
                             elif payloadLength == 126:
                                 responseFrame.append(126)
                                 binaryLength = format(len(finalMessage), 'b').zfill(16)
@@ -185,21 +182,20 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 
                                 responseFrame.append(int(byte1, 2))
                                 responseFrame.append(int(byte2, 2))
-                                responseFrame += finalMessage
+
+                            # Append message byte array
+                            responseFrame += finalMessage
 
 
                             print("RESPONSE FRAME: ", responseFrame)
                             print('\n')
-
+                            # Send the frame to each socket
                             for r in self.client_sockets:
-                                r.request.sendall(responseFrame)
+                                r.sendall(responseFrame)
 
                 except:
                     pass
 
-                
-
-            
             elif path == "/functions.js":
                 with open("functions.js", "r") as file:
                     r = file.read()
