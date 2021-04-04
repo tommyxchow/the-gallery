@@ -9,6 +9,7 @@ import json
 
 class MyTCPHandler(socketserver.BaseRequestHandler):
 
+    # Initialize the database
     client = pymongo.MongoClient('mongo')
     db = client['websocket']
     collection = db['chat']
@@ -169,6 +170,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                                     n = 0
                                     buffer = ''
 
+                            # Insert JSON message into the database
                             self.collection.insert_one(json.loads(finalMessage.decode()))
 
                             # Send the frame to each socket
@@ -177,6 +179,8 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 
                 except:
                     print("CLOSE")
+                    # Close the database and remove the connection
+                    self.client.close()
                     self.client_sockets.remove(self.request)
                     pass
 
