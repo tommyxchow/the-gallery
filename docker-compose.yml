@@ -1,0 +1,10 @@
+version: '3.9'
+services:
+    mongo:
+        image: mongo:latest
+    app:
+        build: .
+        environment:
+            WAIT_HOSTS: mongo:27017
+        ports:
+            - '8080:8000'
