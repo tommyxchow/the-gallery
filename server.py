@@ -3,15 +3,20 @@ import functions as response
 import random
 import hashlib
 import base64
+import pymongo
+import json
 
 
 class MyTCPHandler(socketserver.BaseRequestHandler):
+
+    client = pymongo.MongoClient('mongo')
+    db = client['websocket']
+    collection = db['chat']
 
     comments = {}
     uploadedImages = {}
     tokens = []
     client_sockets = []
-    messages = []
 
     def handle(self):
         # Recieve the next message, decode, and split.
@@ -103,8 +108,8 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 
                 self.client_sockets.append(self.request)
 
-                for msg in self.messages:
-                    self.request.sendall(response.buildWSFrame(msg))
+                for msg in self.collection.find({}, {'_id': False}):
+                    self.request.sendall(response.buildWSFrame(json.dumps(msg).encode()))
 
                 try:
                     while True:
@@ -112,12 +117,13 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 
                         binaryList = []
                         
+                        # Convert recieved message to binary
                         for i in recieved_data:
-                            v = format(i, 'b').zfill(8)
-                            binaryList.append(v)
+                            binaryList.append(format(i, 'b').zfill(8))
 
                         opcode = int(str(binaryList[0][4:]), 2)
 
+                        # Only handle opcode 1
                         if opcode == 1:
                             # Get appropriate metadata
                             mask = int(binaryList[1][0])
@@ -163,8 +169,8 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                                     n = 0
                                     buffer = ''
 
-                            self.messages.append(finalMessage)
-                            
+                            self.collection.insert_one(json.loads(finalMessage.decode()))
+
                             # Send the frame to each socket
                             for r in self.client_sockets:
                                 r.sendall(response.buildWSFrame(finalMessage))
@@ -237,7 +243,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 
 
 def main():
-    host = "0.0.0.0"
+    host = "app"
     port = 8000
 
     server = socketserver.ThreadingTCPServer((host, port), MyTCPHandler)
