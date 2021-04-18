@@ -14,6 +14,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
     db = client['websocket']
     collection = db['chat']
 
+    # Initialize data structures
     comments = {}
     uploadedImages = {}
     tokens = []
@@ -108,6 +109,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                 self.request.sendall(response.buildResponse101(webSocketAccept))
 
                 self.client_sockets.append(self.request)
+                print(self.client_address)
 
                 for msg in self.collection.find({}, {'_id': False}):
                     self.request.sendall(response.buildWSFrame(json.dumps(msg).encode()))
