@@ -103,10 +103,11 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                 if getUser != None:
                     if bcrypt.checkpw(password.encode(), getUser['password']):
                         token = secrets.token_hex(22)
+                        hashedToken = hashlib.sha256(token.encode()).hexdigest()
                         
                         self.loginToken.append(token)
 
-                        self.users.update_one({'username': username}, {'$set': {'token': token}})
+                        self.users.update_one({'username': username}, {'$set': {'token': hashedToken}})
 
 
                         self.homeMessage[0] = f'You logged in as {username}'
@@ -154,7 +155,8 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                     self.loginToken = []
 
                 if currentToken:
-                    getUser = self.users.find_one({'token': currentToken})
+                    hashedToken = hashlib.sha256(currentToken.encode()).hexdigest()
+                    getUser = self.users.find_one({'token': hashedToken})
                     if getUser:
                         self.homeMessage[0] = f'You are logged in as {getUser["username"]}'
                     else:
