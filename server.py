@@ -110,9 +110,10 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 
 
                         self.homeMessage[0] = f'You logged in as {username}'
+                        self.request.sendall(response.buildResponse301('/'))
                     else:
                         self.homeMessage[0] = 'Login failed'
-                    self.request.sendall(response.buildResponse301('/login'))
+                        self.request.sendall(response.buildResponse301('/login'))
                 else:
                     self.homeMessage[0] = 'User does not exist'
                     self.request.sendall(response.buildResponse301('/login'))
@@ -123,10 +124,6 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
         elif requestType == "GET":
 
             if path == "/":
-                print(mappings)
-
-                for i in self.users.find():
-                    print(i)
                     
                 setCookies = ''
                 currentUser = None
@@ -150,9 +147,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                             setCookies = 'Set-Cookie: visited=true'
                 else:
                     setCookies = 'Set-Cookie: visited=true'
-                
-                print(visited, currentUser, currentToken)
-                
+                                
                 welcome_message = 'Welcome!'
                 if visited == 'true':
                     welcome_message = 'Welcome Back!'
@@ -160,8 +155,6 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                 if self.loginToken:
                     setCookies = f'Set-Cookie: username={self.loginToken[0][0]}\r\nSet-Cookie: token={self.loginToken[0][1]}'
                     self.loginToken = []
-
-                print(currentUser, currentToken)
 
                 if currentUser and currentToken:
                     getUser = self.users.find_one({'username': currentUser})
@@ -248,7 +241,6 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                 self.request.sendall(response.buildResponse101(webSocketAccept))
 
                 self.client_sockets.append(self.request)
-                print(self.client_address)
 
                 for msg in self.collection.find({}, {'_id': False}):
                     self.request.sendall(response.buildWSFrame(json.dumps(msg).encode()))
@@ -279,7 +271,6 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 
                             # If payload is 126, get the extended length, update masking key, update payload
                             if payloadLength == 126:
-                                print("PAYLOAD 126")
                                 payloadLength == int(''.join(binaryList[2:4]), 2)
                                 maskingKey = ''.join(binaryList[4:8])
                                 payloadData = ''.join(binaryList[8:])
@@ -319,7 +310,6 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                                 r.sendall(response.buildWSFrame(finalMessage))
 
                 except:
-                    print("CLOSE")
                     # Close the database and remove the connection
                     self.client.close()
                     self.client_sockets.remove(self.request)
