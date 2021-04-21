@@ -1,3 +1,4 @@
+import secrets
 import socketserver
 import functions as response
 import random
@@ -5,7 +6,7 @@ import hashlib
 import base64
 import pymongo
 import json
-
+import bcrypt
 
 class MyTCPHandler(socketserver.BaseRequestHandler):
 
@@ -13,15 +14,19 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
     client = pymongo.MongoClient('mongo')
     db = client['websocket']
     collection = db['chat']
+    users = db['users']
 
     # Initialize data structures
     comments = {}
     uploadedImages = {}
     tokens = []
     client_sockets = []
+    homeMessage = [None]
+    loginToken = []
+    
 
     def handle(self):
-        # Recieve the next message, decode, and split.
+        # Receive the next message, decode, and split.
         req = self.request.recv(1024)
         message = req.decode().split('\r\n')
 
@@ -34,10 +39,11 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 
         if requestType == "POST":
             contentLength = int(mappings['Content-Length'])
-            boundary = mappings['Content-Type'][mappings['Content-Type'].find('=')+1:]
+            boundary = mappings['Content-Type'][1][mappings['Content-Type'][1].find('=')+1:]
             contentBuffer = bytes()
 
-            # Keep recieving until we get all the content
+
+            # Keep receiving until we get all the content
             while len(contentBuffer) <= contentLength:
                 if len(contentBuffer) > 0:
                     req = self.request.recv(1024)
@@ -65,17 +71,114 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                     self.tokens.remove(data['token'])
                     self.request.sendall(response.buildResponse301('/'))
 
+            elif path == '/register':
+                formValues = response.parseMultipart(contentBuffer, boundary)
+                username = formValues['username']
+                password = formValues['password']
+
+                if response.passwordCheck(password):
+
+                    salt = bcrypt.gensalt()
+                    password = bcrypt.hashpw(password.encode(), salt)
+                    newUser = {'username': username, 'password': password, 'token': None}
+
+                    self.users.insert_one(newUser)
+                    
+                    self.homeMessage[0] = 'Registered!'
+
+                    self.request.sendall(response.buildResponse301('/'))
+                else:
+                    self.homeMessage[0] = 'Password not acceptable'
+                    self.request.sendall(response.buildResponse301('/register'))
+
+
+            elif path == '/login':
+                formValues = response.parseMultipart(contentBuffer, boundary)
+
+                username = formValues['username']
+                password = formValues['password']
+
+                getUser = self.users.find_one({'username': username})
+
+                if getUser != None:
+                    if bcrypt.checkpw(password.encode(), getUser['password']):
+                        token = secrets.token_hex(22)
+                        
+                        self.loginToken.append((username, token))
+
+                        self.users.update_one({'username': username}, {'$set': {'token': token}})
+
+
+                        self.homeMessage[0] = f'You logged in as {username}'
+                    else:
+                        self.homeMessage[0] = 'Login failed'
+                    self.request.sendall(response.buildResponse301('/login'))
+                else:
+                    self.homeMessage[0] = 'User does not exist'
+                    self.request.sendall(response.buildResponse301('/login'))
+
+
             self.request.sendall(response.buildResponse403("text/plain", "Invalid token!"))
 
         elif requestType == "GET":
 
             if path == "/":
+                print(mappings)
+
+                for i in self.users.find():
+                    print(i)
+                    
+                setCookies = ''
+                currentUser = None
+                currentToken = None
+
+                visited = None
+                if 'Cookie' in mappings:
+                    # If there is only a single cookie
+                    if type(mappings['Cookie']) == str:
+                        visited = mappings['Cookie'][mappings['Cookie'].find('=')+1:]
+                    # If there are multiple cookies (a list of cookies)
+                    else:
+                        for cookie in mappings['Cookie']:
+                            if 'visited' in cookie:
+                                visited = cookie[cookie.find('=')+1:]
+                            elif 'username' in cookie:
+                                currentUser = cookie[cookie.find('=')+1:]
+                            elif 'token' in cookie:
+                                currentToken = cookie[cookie.find('=')+1:]
+                        if visited == None:
+                            setCookies = 'Set-Cookie: visited=true'
+                else:
+                    setCookies = 'Set-Cookie: visited=true'
+                
+                print(visited, currentUser, currentToken)
+                
+                welcome_message = 'Welcome!'
+                if visited == 'true':
+                    welcome_message = 'Welcome Back!'
+
+                if self.loginToken:
+                    setCookies = f'Set-Cookie: username={self.loginToken[0][0]}\r\nSet-Cookie: token={self.loginToken[0][1]}'
+                    self.loginToken = []
+
+                print(currentUser, currentToken)
+
+                if currentUser and currentToken:
+                    getUser = self.users.find_one({'username': currentUser})
+                    if getUser['token'] == currentToken:
+                        self.homeMessage[0] = f'You are logged in as {currentUser}'
+
+
                 htmlString = []
-                with open("index.html", "r") as file:
+                with open("static/index.html", "r") as file:
+
                     r = file.readlines()
 
                     for line in r:
-                        if line.find("{{buttonLoop}}") != -1:
+                        if line.find('{{welcome}}') != -1:
+                            htmlString.append(f'<h1>{welcome_message}</h1>')
+
+                        elif line.find("{{buttonLoop}}") != -1:
                             for imageName in self.uploadedImages:
                                 if len(self.uploadedImages[imageName]) > 0:
                                     newButton = "<button id = {0} onclick = 'loadImage(id)'>{1}</button>".format(imageName, self.uploadedImages[imageName])
@@ -93,12 +196,48 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                             self.tokens.append(str(newToken))
                             token = '<input hidden id="random-token" type="text" name="token" value={}>'.format(newToken)
                             htmlString.append(token)
+                        elif '{{message}}' in line:
+                            if self.homeMessage[0] != None:
+                                htmlString.append(f'<h1>{self.homeMessage[0]}</h1><br>')
+                                self.homeMessage[0] = None
                         else:
                             htmlString.append(line)
 
                 buildString = "".join(htmlString)
 
-                self.request.sendall(response.buildResponse200("text/html", len(buildString), buildString))  
+                self.request.sendall(response.buildResponse200("text/html", len(buildString), buildString, setCookies))
+
+            elif path =='/register':
+
+                htmlString = []
+                with open("static/register.html", "r") as file:
+                    r = file.readlines()
+                    for line in r:
+                        if '{{message}}' in line:
+                            if self.homeMessage[0] != None:
+                                htmlString.append(f'<h1>{self.homeMessage[0]}</h1><br>')
+                                self.homeMessage[0] = None
+                        else:
+                            htmlString.append(line)
+
+                buildString = "".join(htmlString)
+                self.request.sendall(response.buildResponse200("text/html", len(buildString), buildString))
+
+            elif path == '/login':
+
+                htmlString = []
+                with open("static/login.html", "r") as file:
+                    r = file.readlines()
+                    for line in r:
+                        if '{{message}}' in line:
+                            if self.homeMessage[0] != None:
+                                htmlString.append(f'<h1>{self.homeMessage[0]}</h1><br>')
+                                self.homeMessage[0] = None
+                        else:
+                            htmlString.append(line)
+
+                buildString = "".join(htmlString)
+                self.request.sendall(response.buildResponse200("text/html", len(buildString), buildString))
 
             elif path == '/websocket':
                 
@@ -116,12 +255,12 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 
                 try:
                     while True:
-                        recieved_data = self.request.recv(1024)
+                        received_data = self.request.recv(1024)
 
                         binaryList = []
                         
-                        # Convert recieved message to binary
-                        for i in recieved_data:
+                        # Convert received message to binary
+                        for i in received_data:
                             binaryList.append(format(i, 'b').zfill(8))
 
                         opcode = int(str(binaryList[0][4:]), 2)
@@ -192,12 +331,12 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                     self.request.sendall(response.buildResponse200("text/javascript", len(r), r))
 
             elif path == "/style.css":
-                with open("style.css", "r") as file:
+                with open("static/style.css", "r") as file:
                     r = file.read()
                     self.request.sendall(response.buildResponse200("text/css", len(r), r))
 
             elif path == "/utf.txt":
-                with open("utf.txt", "rb") as file:
+                with open("static/utf.txt", "rb") as file:
                     r = file.read()
                     self.request.sendall(response.buildResponseBinary("text/plain; charset=utf-8", r))
 
@@ -217,7 +356,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                     htmlString = []
                     keyValues = response.queryToDictionary(path)
 
-                    with open("images.html", "r") as file:
+                    with open("static/images.html", "r") as file:
                         r = file.readlines()
                         for line in r:
                             if line.find("{{name}}") != -1:

@@ -1,6 +1,8 @@
 services:
     mongo:
-        image: mongo:latest
+        image: mongo
+        logging:
+            driver: none
     app:
         build: .
         environment:

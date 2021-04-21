@@ -1,6 +1,8 @@
 # encode string into a byte array and ship it
-def buildResponse200(mimeType, length, content):
-    httpResponse = "HTTP/1.1 200 OK\r\nContent-Type: {}\r\nContent-Length: {}\r\nX-Content-Type-Options: nosniff\r\n\r\n{}".format(mimeType, length, content)
+def buildResponse200(mimeType, length, content, options=''):
+    if options != '':
+        options += '\r\n'
+    httpResponse = f'HTTP/1.1 200 OK\r\nContent-Type: {mimeType}\r\nContent-Length: {length}\r\n{options}X-Content-Type-Options: nosniff\r\n\r\n{content}'
 
     return httpResponse.encode()
 
@@ -54,6 +56,9 @@ def formatRequest(requestArray):
         keyEnd = requestArray[i].find(":")
         key = requestArray[i][0:keyEnd]
         value = requestArray[i][keyEnd+2:]
+
+        if ';' in value:
+            value = value.split(';')
         kv[key] = value
     return kv
 
@@ -77,6 +82,7 @@ def escapeDIR(string):
 def parseMultipart(buffer, boundary):
     boundary = '--' + boundary
     splitted = buffer.split('\r\n'.encode())
+    keys = ['name', 'comment', 'username', 'password', 'token']
 
     kv = {}
 
@@ -105,7 +111,7 @@ def parseMultipart(buffer, boundary):
                         contentType = contentType.split(': ')
                         kv[contentType[0]] = contentType[1]
 
-                    elif name == "name" or name == "comment" or name == "token":
+                    elif name in keys:
                         kv[escapeHTML(name)] = escapeHTML(splitted[i+3].decode())
 
                     else:
@@ -141,3 +147,21 @@ def buildWSFrame(payload):
     print(len(responseFrame))
 
     return responseFrame
+
+def passwordCheck(password: str):
+    specialCharacters = " !\"#$%&'()*+,-./:;<=>?@[\]^_`{|}~"
+    if not password:
+        return False
+    if not password[0].isupper():
+        return False
+    if len(password) < 8:
+        return False
+    if password.isupper():
+        return False
+    if password.islower():
+        return False
+    if not any(x.isdigit() for x in password):
+        return False
+    if not any(x in specialCharacters for x in password):
+        return False
+    return True

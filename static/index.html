@@ -7,8 +7,10 @@
 </head>
 
 <body>
-
-    <h1>Welcome To My Gallery!</h1>
+    {{message}}
+    {{welcome}}
+    <a href="/login">Login</a><br>
+    <a href="/register">Register</a><br>
 
     <p>Here are the art pieces we currently have on display:</p>
 
@@ -32,9 +34,10 @@
         <form action="/image-upload" id="image-form" method="post" enctype="multipart/form-data">
             <label for="form-file">Image: </label>
             <input id="form-file" type="file" name="upload">
-            <br />
+            <br><br>
             <label for="image-form-name">Caption: </label>
             <input id="image-form-name" type="text" name="name">
+            <br><br>
             <input type="submit" value="Submit">
             {{token}}
         </form>
@@ -47,9 +50,11 @@
     <div class="form" id="commentForm">
         <form action="/comment" id="comment-form" method="post" enctype="multipart/form-data">
             <label for="text-form-name">Name: </label>
-            <input id="text-form-name" type="text" name="name"><br />
+            <input id="text-form-name" type="text" name="name">
+            <br><br>
             <label for="form-comment">Comment: </label>
             <input id="form-comment" type="text" name="comment">
+            <br><br>
             <input type="submit" value="Submit">
             {{token}}
         </form>
@@ -64,9 +69,10 @@
     <div class="chat" id="chatInput">
         <label for="chat-name">Name: </label>
         <input id="chat-name" type="text" name="name">
-        <br />
+        <br><br>
         <label for="chat-comment">Comment: </label>
         <input id="chat-comment" type="text" name="comment">
+        <br><br>
         <button onclick="sendMessage()">Chat</button>
     </div>
 

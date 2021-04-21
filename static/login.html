@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Login</title>
+        <link rel="stylesheet" type="text/css" href="style.css"/>
+    </head>
+<body>
+
+    <h1>Login</h1>
+    {{message}}
+
+    <div class="form" id="loginForm">
+        <form action="/login" id="login-form" method="post" enctype="multipart/form-data">
+            <label for="text-form-name">Username: </label>
+            <input id="text-form-name" type="text" name="username">
+            <br><br>
+            <label for="form-comment">Password: </label>
+            <input id="form-comment" type="text" name="password">
+            <br><br>
+            <input type="submit" value="Submit">
+        </form>
+    </div>
+
+</body>
+</html>

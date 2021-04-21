@@ -43,3 +43,19 @@ function loadImage(id) {
 	test.src = "/image/" + id
 	test.className = "gallery"
 }
+
+function sendIt() {
+	var xhttp = new XMLHttpRequest();
+	xhttp.onreadystatechange = function () {
+		if (this.readyState == 4 && this.status == 200) {
+			jsonResponse = JSON.parse(this.responseText)
+			users = ''
+			for (i = 0; i < jsonResponse['online_users'].length; i++) {
+				users += jsonResponse['online_users'][i] + '<br>'
+			}
+			document.getElementById('users').innerHTML = users;
+		}
+	};
+	xhttp.open('GET', '/online');
+	xhttp.send();
+}
