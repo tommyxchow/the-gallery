@@ -104,7 +104,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                     if bcrypt.checkpw(password.encode(), getUser['password']):
                         token = secrets.token_hex(22)
                         
-                        self.loginToken.append((username, token))
+                        self.loginToken.append(token)
 
                         self.users.update_one({'username': username}, {'$set': {'token': token}})
 
@@ -126,7 +126,6 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
             if path == "/":
                     
                 setCookies = ''
-                currentUser = None
                 currentToken = None
 
                 visited = None
@@ -139,8 +138,6 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                         for cookie in mappings['Cookie']:
                             if 'visited' in cookie:
                                 visited = cookie[cookie.find('=')+1:]
-                            elif 'username' in cookie:
-                                currentUser = cookie[cookie.find('=')+1:]
                             elif 'token' in cookie:
                                 currentToken = cookie[cookie.find('=')+1:]
                         if visited == None:
@@ -153,13 +150,15 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                     welcome_message = 'Welcome Back!'
 
                 if self.loginToken:
-                    setCookies = f'Set-Cookie: username={self.loginToken[0][0]}\r\nSet-Cookie: token={self.loginToken[0][1]}'
+                    setCookies = f'Set-Cookie: token={self.loginToken[0]}'
                     self.loginToken = []
 
-                if currentUser and currentToken:
-                    getUser = self.users.find_one({'username': currentUser})
-                    if getUser['token'] == currentToken:
-                        self.homeMessage[0] = f'You are logged in as {currentUser}'
+                if currentToken:
+                    getUser = self.users.find_one({'token': currentToken})
+                    if getUser:
+                        self.homeMessage[0] = f'You are logged in as {getUser["username"]}'
+                    else:
+                        self.homeMessage[0] = 'Invalid login token'
 
 
                 htmlString = []

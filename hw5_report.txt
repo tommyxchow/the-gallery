@@ -34,9 +34,9 @@ MongoDB. Then the user is redirected to the home page, where their username and
 token is set as the cookies. Now that the cookies are set, the user is 
 authenticated and logged in for every subsequent request.
 
-Everytime the user visits the home page, the username and token are read from
-the cookie header. If the token matches the one in the database, the name of the
-user with the associated token is displayed.
+Everytime the user visits the home page, the token is read from the cookie 
+header. If the token matches a user in the database, the name of the user with 
+the associated token is displayed.
 
 
 ---Bonus---
