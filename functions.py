@@ -144,8 +144,6 @@ def buildWSFrame(payload):
     # Append message byte array
     responseFrame += payload
 
-    print(len(responseFrame))
-
     return responseFrame
 
 def passwordCheck(password: str):

@@ -75,20 +75,20 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                 formValues = response.parseMultipart(contentBuffer, boundary)
                 username = formValues['username']
                 password = formValues['password']
-
-                if response.passwordCheck(password):
-
-                    salt = bcrypt.gensalt()
-                    password = bcrypt.hashpw(password.encode(), salt)
-                    newUser = {'username': username, 'password': password, 'token': None}
-
-                    self.users.insert_one(newUser)
-                    
-                    self.homeMessage[0] = 'Registered!'
-
-                    self.request.sendall(response.buildResponse301('/'))
+                
+                if self.users.count_documents({'username': username}) == 0:
+                    if response.passwordCheck(password) and self.users.count_documents({'username': username}) == 0:
+                        salt = bcrypt.gensalt()
+                        password = bcrypt.hashpw(password.encode(), salt)
+                        newUser = {'username': username, 'password': password, 'token': None}
+                        self.users.insert_one(newUser)
+                        self.homeMessage[0] = 'Registered!'
+                        self.request.sendall(response.buildResponse301('/'))
+                    else:
+                        self.homeMessage[0] = 'Password not acceptable'
+                        self.request.sendall(response.buildResponse301('/register'))
                 else:
-                    self.homeMessage[0] = 'Password not acceptable'
+                    self.homeMessage[0] = 'User already registered'
                     self.request.sendall(response.buildResponse301('/register'))
 
 
