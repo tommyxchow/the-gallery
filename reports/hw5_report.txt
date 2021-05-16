@@ -1,7 +1,7 @@
 Homework 5 Report
 
 ---Objective 1---
-When the user requests the home page (line 126), I check the headers to see if
+When the user requests the home page (line 127), I check the headers to see if
 there is a cookie header available. To determine whether a user has visited the
 page before, I read and send the "visited=true" cookie.
 

@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>Register</title>
-        <link rel="stylesheet" type="text/css" href="style.css"/>
-    </head>
-<body>
 
+<head>
+    <title>Register</title>
+    <link rel="stylesheet" type="text/css" href="style.css" />
+</head>
+
+<body>
     <h1>Register</h1>
 
     {{message}}
@@ -13,16 +14,16 @@
     <div class="form" id="registerForm">
         <form action="/register" id="register-form" method="post" enctype="multipart/form-data">
             <label for="text-form-name">Username: </label>
-            <input id="text-form-name" type="text" name="username">
-            <br><br>
+            <input id="text-form-name" type="text" name="username" />
+            <br /><br />
             <label for="form-comment">Password: </label>
-            <input id="form-comment" type="password" name="password">
-            <br><br>
-            <input type="submit" value="Submit">
+            <input id="form-comment" type="password" name="password" />
+            <br /><br />
+            <input type="submit" value="Submit" />
         </form>
     </div>
 
-    <br>
+    <br />
 
     <p>Password Requirements:</p>
     <li>A minimum length of 8</li>
@@ -31,6 +32,6 @@
     <li>At least 1 number</li>
     <li>At least 1 special character</li>
     <li>First letter must be capitalized</li>
-
 </body>
+
 </html>
