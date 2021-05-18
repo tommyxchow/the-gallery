@@ -4,7 +4,7 @@ The Gallery is a **deceptively basic** web application that consists of the foll
 
 - **Image Uploads**: Upload images to be displayed through a button on the homepage (multipart/form-data).
 - **Commenting**: Post public comments through a form (multipart/form-data).
-- **Chat**: A live persistent chat allows you to communicate with other users (WebSockets, MongoDB).
+- **Chat**: A live persistent chat that allows you to communicate with other users (WebSockets, MongoDB).
 - **Authentication**: Register and login with token-based authentication (bcrypt).
 
 The Gallery is also the culmination of a series of homework assignments I completed during Spring 2021 in the course [CSE 312](https://cse312.com) at the University at Buffalo.
